@@ -8,10 +8,12 @@ import {
   RosterPage,
 } from "./pages";
 import NotFound from "./components/notFound";
+import Navigation from "./components/navigation";
 
 function App() {
   return (
     <Router>
+      <Navigation />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/pokemon/:name" element={<DetailsPage />} />
