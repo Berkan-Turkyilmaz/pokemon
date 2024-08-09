@@ -7,12 +7,13 @@ export default function BattlePage() {
   const [wins, setWins] = useState(0);
   const [losses, setLosses] = useState(0);
   const [isSuccess, setIsSuccess] = useState(true);
-
+  const [userName, setUserName] = useState();
+  //fetches stored roster from localstorage data
   useEffect(() => {
     const storedRoster = JSON.parse(localStorage.getItem("roster")) || 0;
     setRoster(storedRoster);
   }, []);
-
+  //opponent selected randomly
   const getRandomOpponent = () => {
     axios
       .get(
@@ -25,7 +26,13 @@ export default function BattlePage() {
       })
       .catch((error) => console.log("error", error));
   };
+
+  //battle function
   const battle = (pokemon) => {
+    if (!userName || userName.trim() === "") {
+      alert("Please enter your username!");
+      return;
+    }
     if (!opponent) return;
     const userStat = pokemon.stats.reduce(
       (sum, stat) => sum + stat.base_stat,
@@ -45,17 +52,51 @@ export default function BattlePage() {
       setLosses(losses + 1);
       setIsSuccess(false);
     }
-
+    if (userStat === oppenentStat) {
+      setIsSuccess(true);
+      setBattleResult("Draw!");
+    }
+    handlePostScore(userName, wins);
     getRandomOpponent();
   };
 
   useEffect(() => {
     getRandomOpponent();
   }, []);
+  //post battle result to backend
+  const handlePostScore = async (userName, score) => {
+    try {
+      await axios
+        .post("http://localhost:8080/api/leaderboard", {
+          userName: userName,
+          score: score,
+        })
+        .then((res) => {
+          if (res.status === 200) {
+            alert("Successfully posted for score.");
+          }
+        })
+        .catch((error) => {
+          console.error("Error", error);
+        });
+    } catch {
+      (error) => console.error("Error Post score:", error);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4">Battle</h1>
+      <div className="mb-2">
+        <p className="text-md font-semibold">Enter your name</p>
+        <input
+          type="text"
+          className="w-full mt-1 px-2 py-4 border border-gray-400 rounded shadow focus:outline-none focus:ring-red-300 focus:border-red-500"
+          value={userName}
+          placeholder="Enter username"
+          onChange={(event) => setUserName(event.target.value)}
+        />
+      </div>
       <p>
         Wins: {wins} | Losses: {losses}
       </p>
